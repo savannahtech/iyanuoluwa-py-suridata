@@ -45,8 +45,7 @@ def create_pairs(employee_list, queue, paired_set, lock):
 
 # Function to process a chunk of employee data
 def process_chunk(employee_template, queue, paired_set, lock):
-    cleaned_chunk = validate_and_clean(employee_template)
-    pairs = create_pairs(cleaned_chunk, queue, paired_set, lock)
+    pairs = create_pairs(employee_template, queue, paired_set, lock)
     queue.task_done()
     return pairs
 
@@ -590,10 +589,11 @@ def main():
             "age": 44
         }
     ]
-
+    # Removing duplicates and validating the input
+    employee_template = validate_and_clean(employees)
     with Manager() as manager:
         employee_queue = manager.Queue()
-        for employee in employees:
+        for employee in employee_template:
             employee_queue.put(employee)
 
         paired_set = set()
@@ -609,45 +609,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-
-
-
-
-
-
-#  Example Output:
-# [('Reed Parks', 'Taniyah Ramos'), ('Louis Mcintosh', 'Quinn Reese'), ('Kristin Dorsey', 'Terrance Gallagher'),
-# ('Nadia Hernandez', 'Jayleen Henry'), ('Evelyn Roth', 'Jay Gonzales'), ('Finley Vang', 'Brayden Young'),
-# ('Jaydin Braun', 'Gerald Booker'), ('Alvaro Haley', 'Kaleb Benitez'), ('Maria Kelley', 'Shayna Burke'),
-# ('Grayson Barrera', 'Joyce Randolph'), ('Heaven Bartlett', 'Carolina Rowe'), ('Zack Barnes', 'Darnell Rangel'),
-# ('Taniyah Ramos', 'Saniyah Luna'), ('Jorge Good', 'Heaven Bartlett'), ('Axel Bolton', 'Abril Schaefer'),
-# ('Saniyah Luna', 'Jason Jimenez'), ('Madilyn Melton', 'Alan Kemp'), ('Alan Kemp', 'Oliver Mcconnell'),
-# ('Brayden Young', 'Omar Browning'), ('Dalia Gomez', 'Eli Buck'), ('Dario Robertson', 'Madilyn Melton'),
-# ('Jaden Hardin', 'Jaidyn Noble'), ('Joyce Randolph', 'Bennett Wolf'), ('Jaidyn Noble', 'Desiree Carey'),
-# ('Gerald Booker', 'Jorge Good'), ('Kristopher Sanders', 'Francisco Escobar'), ('Shyann Harmon', 'Saige Castro'),
-# ('Eli Buck', 'Elliot Cantu'), ('Jadon Tucker', 'Charlize Cobb'), ('Fiona Pearson', 'Houston Nguyen'),
-# ('Lillie Pollard', 'Devin Benitez'), ('Nikolas Porter', 'Esmeralda Harris'), ('Yuram Henson', 'Riley Fowler'),
-# ('Leila Becker', 'Fiona Pearson'), ('Erica Bullock', 'Reed Parks'), ('Jazmine Massey', 'Nikolas Porter'),
-# ('Rhianna Potter', 'Erica Bullock'), ('Harry Peterson', 'Aimee Mcpherson'), ('Shayna Burke', 'Abby Zuniga'),
-# ('Koen Luna', 'Camron Jacobs'), ('Abigayle Sosa', 'Hayden Massey'), ('Grady Baird', 'Elisha Andrade'),
-# ('Bennett Wolf', 'Kendall Cochran'), ('Elisha Andrade', 'Maria Kelley'), ('Kenyon York', 'Lilliana Wood'),
-# ('Nadia David', 'Messiah Glover'), ('Mina Caldwell', 'Jazmine Massey'), ('Jayleen Henry', 'Alvaro Haley'),
-# ('Royce Moore', 'Koen Luna'), ('Saige Castro', 'Sterling Walton'), ('Sasha Horn', 'Rhianna Potter'),
-# ('Amiah Powell', 'Kristopher Sanders'), ('Hayden Massey', 'Brendon Osborne'), ('Devin Benitez', 'Zack Barnes'),
-# ('Anthony Bray', 'Shea Robles'), ('Kelvin Cameron', 'Lindsey Hines'), ('Charlize Cobb', 'Ellis Davenport'),
-# ('Riley Fowler', 'Jaydin Braun'), ('Carolina Rowe', 'Jadon Tucker'), ('Elliot Cantu', 'Abigayle Sosa'),
-# ('June Hanna', 'Grady Baird'), ('Jordyn May', 'Ralph Yu'), ('Kaleb Benitez', 'Zackary Nguyen'),
-# ('Zackary Nguyen', 'Shyann Harmon'), ('Melody Nielsen', 'Katrina Hanna'), ('Wilson Medina', 'Kenyon York'),
-# ('Vaughn Phelps', 'Jimena Roman'), ('Ellis Davenport', 'Dario Robertson'), ('Ralph Yu', 'Nadia Hernandez'),
-# ('Desiree Carey', 'Kristin Dorsey'), ('Messiah Glover', 'Simon Walker'), ('Jay Gonzales', 'Axel Bolton'),
-# ('Abby Zuniga', 'Anthony Bray'), ('Abril Schaefer', 'Melody Nielsen'), ('Kylan Cantrell', 'Mariyah Park'),
-# ('Sterling Walton', 'Donovan Petersen'), ('Simon Walker', 'Amiah Powell'), ('Tate Yates', 'Jaden Hardin'),
-# ('Aracely Nguyen', 'Sasha Horn'), ('Brendon Osborne', 'Harry Peterson'), ('Kaiya Fry', 'Yuram Henson'),
-# ('Esmeralda Harris', 'Nadia David'), ('Oliver Mcconnell', 'Kelvin Cameron'), ('Mariyah Park', 'Aracely Nguyen'),
-# ('Lilliana Wood', 'Evelyn Roth'), ('Darnell Rangel', 'Vaughn Phelps'), ('Aimee Mcpherson', 'Aditya Wilkerson'),
-# ('Donovan Petersen', 'Lillie Pollard'), ('Francisco Escobar', 'Grayson Barrera'), ('Camron Jacobs', 'Yuram Henson'),
-# ('Shea Robles', 'Tate Yates'), ('Lindsey Hines', 'Ariel Reed'), ('Jason Jimenez', 'Kenyon Patel'),
-# ('Terrance Gallagher', 'Kaiya Fry'), ('Houston Nguyen', 'Jordyn May'), ('Aditya Wilkerson', 'Clara Bradley'),
-# ('Clara Bradley', 'Finley Vang'), ('Omar Browning', 'June Hanna'), ('Quinn Reese', 'Wilson Medina'),
-# ('Katrina Hanna', 'Louis Mcintosh'), ('Kendall Cochran', 'Royce Moore'), ('Justice Boyle', 'Dalia Gomez'),
-# ('Kenyon Patel', 'Leila Becker'), ('Ariel Reed', 'Oliver Mcconnell'), ('Jimena Roman', 'Kylan Cantrell')]
+    
