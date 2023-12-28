@@ -1,5 +1,5 @@
 import random
-from multiprocessing import Pool, Manager, Lock
+from multiprocessing import Pool, Manager, Lock, cpu_count
 
 
 # The function below validates and clean the input.
@@ -18,42 +18,38 @@ def validate_and_clean(employee_template):
 
 
 # The function below pairs the employee following the guidelines provided
-def create_pairs(employee_list, queue, paired_set, lock):
-    random.shuffle(employee_list)
-    pairs = set()
+def create_pairs(employee_chunk):
+    employee_tuples = []
+    n = len(employee_chunk)
 
-    for employee in employee_list:
-        if not queue.empty():
-          partner = queue.get()
-          pair = (employee["name"], partner["name"])
+    for i in range(n):
+        employee1 = employee_chunk[i]
+        employee2 = employee_chunk[(i + 1) % n]  # Wrap around to the first employee for the last one
+        employee_tuples.append((employee1["name"], employee2["name"]))
 
-        with lock:
-            # This ensures the pair is not a duplicate of (employee, partner) or (partner, employee)
-            # It Also, ensure an employee is not paired with themselves
-            while pair in paired_set or (pair[1], pair[0]) in paired_set or pair[0] == pair[1]:
-                if not queue.empty():
-                  partner = queue.get()
-                  pair = (employee["name"], partner["name"])
-                else:
-                  break
+    return employee_tuples
 
-            pairs.add(pair)
-            paired_set.add(pair)
 
-    return list(pairs)
+def chunk_employee(employees):
+    num_employees = len(employees)
+    num_available_processors = cpu_count()
+    num_processes = num_available_processors
+    # Adjust the number of processes based on the length of the employees list
+    if num_employees < num_available_processors:
+        num_processes = num_employees
+    elif num_employees < 2 * num_available_processors:
+        # If there are fewer employees than twice the available processors, use half of them
+        num_processes = num_available_processors // 2
+    # Split the data into chunks for parallel processing
+    chunk_size = num_employees // num_processes
+    return num_processes, chunk_size
 
 
 # Function to process a chunk of employee data
-def process_chunk(employee_template, queue, paired_set, lock):
-    pairs = create_pairs(employee_template, queue, paired_set, lock)
-    queue.task_done()
+def process_chunk(employee_template):
+    random.shuffle(employee_template)
+    pairs = create_pairs(employee_template)
     return pairs
-
-
-# Function to split the list into chunks
-def chunks(employee_template, chunk_size):
-    for i in range(0, len(employee_template), chunk_size):
-        yield employee_template[i:i + chunk_size]
 
 
 # Main execution block with sample data
@@ -597,20 +593,15 @@ def main():
     ]
     # Removing duplicates and validating the input
     employee_template = validate_and_clean(employees)
-    with Manager() as manager:
-        employee_queue = manager.Queue()
-        for employee in employee_template:
-            employee_queue.put(employee)
-
-        paired_set = set()
-        lock = manager.Lock()
-
-        chunk_size = 5  # Set the desired chunk size
-        employee_chunks = list(chunks(employee_template, chunk_size))
-
-        with Pool() as pool:
-            results = pool.starmap(process_chunk,
-                                   [(chunk, employee_queue, paired_set, lock) for chunk in employee_chunks])
+    num_of_process, chunk_size = chunk_employee(employee_template)
+    # Splitting the data into chunks for parallel processing
+    chunks = [employee_template[i:i + chunk_size] for i in range(0, len(employee_template), chunk_size)]
+    # Creating a Pool of processes
+    pool = Pool(num_of_process)
+    # Mapping the process to the data chunks
+    results = pool.map(process_chunk, chunks)
+    pool.close()
+    pool.join()
     final_output = [pair for sublist in results for pair in sublist]
     print(final_output)
 
