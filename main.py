@@ -50,6 +50,12 @@ def process_chunk(employee_template, queue, paired_set, lock):
     return pairs
 
 
+# Function to split the list into chunks
+def chunks(employee_template, chunk_size):
+    for i in range(0, len(employee_template), chunk_size):
+        yield employee_template[i:i + chunk_size]
+
+
 # Main execution block with sample data
 def main():
     employees = [
@@ -599,9 +605,12 @@ def main():
         paired_set = set()
         lock = manager.Lock()
 
-        with Pool() as pool:
-            results = pool.starmap(process_chunk, [(employees, employee_queue, paired_set, lock)])
+        chunk_size = 5  # Set the desired chunk size
+        employee_chunks = list(chunks(employee_template, chunk_size))
 
+        with Pool() as pool:
+            results = pool.starmap(process_chunk,
+                                   [(chunk, employee_queue, paired_set, lock) for chunk in employee_chunks])
     final_output = [pair for sublist in results for pair in sublist]
     print(final_output)
 
@@ -609,4 +618,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-    
